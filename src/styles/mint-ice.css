@@ -1,0 +1,20 @@
+/* Mint Ice theme (Light) - Hakkagoori */
+.gradient-hakkagoori {
+  background-color: #F2FDF9;
+  background-image: 
+    radial-gradient(at 15% 15%, #A8F0DC 0px, transparent 50%),
+    radial-gradient(at 85% 20%, #52CBB0 0px, transparent 50%),
+    radial-gradient(at 50% 80%, #CFF7EA 0px, transparent 55%),
+    radial-gradient(at 90% 85%, #A8F0DC 0px, transparent 40%);
+  background-size: 100% 100%;
+  position: relative;
+}
+
+.gradient-hakkagoori::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}

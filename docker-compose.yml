@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: medbridge
+      POSTGRES_PASSWORD: medbridge
+      POSTGRES_DB: medbridge
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medbridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://medbridge:medbridge@db:5432/medbridge
+      AUTH_SECRET: medbridge-production-secret-auth-key-at-least-32-chars-long
+      STORAGE_DIR: ./storage
+      CONFIDENCE_THRESHOLD: 0.80
+      SLA_HOURS_HIGH: 4
+      SLA_HOURS_MEDIUM: 24
+      SLA_HOURS_LOW: 72
+      HANDOVER_DEFAULT_DAYS: 7
+      HANDOVER_PUBLIC_ENABLED: "false"
+      ALLOWED_INTERNAL_HOSTS: "localhost,127.0.0.1,db,ollama"
+      NEXT_TELEMETRY_DISABLED: "1"
+      CHECKPOINT_DISABLE: "1"
+      APP_URL: "http://localhost:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./storage:/app/storage
+    networks:
+      - backend
+      - edge
+    command: sh -c "npx prisma migrate deploy && npm run seed && npm run start"
+
+networks:
+  backend:
+    internal: true
+  edge: {}
+
+volumes:
+  pgdata: {}

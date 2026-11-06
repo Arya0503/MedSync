@@ -1,0 +1,53 @@
+:root {
+  /* Mint Ice (Light) */
+  --bg: #F2FDF9;
+  --surface: #FFFFFF;
+  --ink: #0F2A24;
+  --ink-soft: #3C5A52;
+  --accent: #147A5F;
+  --accent-ink: #FFFFFF;
+  --soft: #A8F0DC;
+  --deco: #52CBB0;
+  --line: #CFEFE6;
+  --focus: #147A5F;
+  --blob-1: #A8F0DC;
+  --blob-2: #52CBB0;
+  --blob-3: #CFF7EA;
+  --blob-4: #147A5F;
+}
+
+[data-theme="dark"] {
+  /* Untitled Blend (Dark) */
+  --bg: #12142E;
+  --surface: #1B1E42;
+  --ink: #F1EEFB;
+  --ink-soft: #B9B5D6;
+  --accent: #F6C6E2;
+  --accent-ink: #12142E;
+  --soft: #4C3894;
+  --deco: #B387E8;
+  --line: #2D3160;
+  --focus: #F6C6E2;
+  --blob-1: #4C3894;
+  --blob-2: #B387E8;
+  --blob-3: #2A2F6E;
+  --blob-4: #F6C6E2;
+}
+
+/* High Contrast Mode */
+[data-contrast="high"] {
+  --line: #000000;
+  --focus: #000000;
+}
+[data-theme="dark"][data-contrast="high"] {
+  --line: #FFFFFF;
+  --focus: #FFFFFF;
+}
+
+/* Text Scaling */
+[data-scale="125"] {
+  font-size: 125%;
+}
+[data-scale="150"] {
+  font-size: 150%;
+}

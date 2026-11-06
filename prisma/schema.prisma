@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  CLINICIAN
+  PHARMACIST
+  ADMIN
+}
+
+enum DocStatus {
+  UPLOADED
+  PROCESSING
+  NEEDS_REVIEW
+  CONFIRMED
+  FAILED
+}
+
+enum Severity {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ESCALATED
+}
+
+enum DiscrepancyType {
+  CONFLICTING_STRENGTH
+  STRENGTH_CHANGED
+  INSTRUCTION_DIFFERS
+  MISSING_INSTRUCTION
+  MISSING_OR_OUTDATED
+  MISSING_FIELD
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String
+  role         Role
+  patientId    String?        @unique
+  patient      Patient?       @relation(fields: [patientId], references: [id])
+  settings     UserSettings?
+  grants       AccessGrant[]
+  notifications Notification[]
+  createdAt    DateTime       @default(now())
+}
+
+model UserSettings {
+  userId       String   @id
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reduceMotion Boolean  @default(false)
+  bgMotion     Boolean  @default(true)
+  textScale    Int      @default(100)
+  highContrast Boolean  @default(false)
+  simpleMode   Boolean  @default(false)
+  language     String   @default("en")
+  theme        String   @default("system")
+}
+
+model Patient {
+  id            String         @id @default(cuid())
+  mrn           String         @unique
+  name          String
+  dob           DateTime
+  isSynthetic   Boolean        @default(true)
+  user          User?
+  grants        AccessGrant[]
+  visits        Visit[]
+  discrepancies Discrepancy[]
+  cards         HandoverCard[]
+  createdAt     DateTime       @default(now())
+}
+
+model AccessGrant {
+  id        String    @id @default(cuid())
+  patientId String
+  userId    String
+  grantedAt DateTime  @default(now())
+  revokedAt DateTime?
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([patientId, userId])
+}
+
+model Visit {
+  id        String            @id @default(cuid())
+  patientId String
+  facility  String
+  visitType String
+  visitDate DateTime
+  patient   Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  documents SourceDocument[]
+  entries   MedicationEntry[]
+
+  @@index([patientId, visitDate])
+}
+
+model SourceDocument {
+  id               String            @id @default(cuid())
+  visitId          String
+  fileName         String
+  mimeType         String
+  storagePath      String
+  sha256           String
+  pageCount        Int               @default(1)
+  status           DocStatus         @default(UPLOADED)
+  extractionMethod String?
+  uploadedById     String
+  createdAt        DateTime          @default(now())
+  visit            Visit             @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  lines            DocumentLine[]
+  fields           ExtractedField[]
+  entries          MedicationEntry[]
+}
+
+model DocumentLine {
+  id            String         @id @default(cuid())
+  documentId    String
+  page          Int
+  lineIndex     Int
+  text          String
+  x             Float
+  y             Float
+  w             Float
+  h             Float
+  ocrConfidence Float?
+  document      SourceDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, page, lineIndex])
+}
+
+model Drug {
+  id            String            @id @default(cuid())
+  canonicalName String            @unique
+  rxnormId      String?
+  aliases       DrugAlias[]
+  entries       MedicationEntry[]
+}
+
+model DrugAlias {
+  id     String @id @default(cuid())
+  drugId String
+  alias  String @unique
+  drug   Drug   @relation(fields: [drugId], references: [id], onDelete: Cascade)
+}
+
+model MedicationEntry {
+  id             String           @id @default(cuid())
+  visitId        String
+  documentId     String
+  drugId         String?
+  drugNameRaw    String
+  strengthRaw    String?
+  strengthValue  Float?
+  strengthUnit   String?
+  formRaw        String?
+  instructionRaw String?
+  startDate      DateTime?
+  stopDate       DateTime?
+  confirmed      Boolean          @default(false)
+  confirmedById  String?
+  createdAt      DateTime         @default(now())
+  visit          Visit            @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  document       SourceDocument   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  drug           Drug?            @relation(fields: [drugId], references: [id])
+  fields         ExtractedField[]
+}
+
+model ExtractedField {
+  id             String          @id @default(cuid())
+  entryId        String
+  documentId     String
+  fieldName      String
+  rawText        String
+  lineId         String?
+  page           Int
+  x              Float
+  y              Float
+  w              Float
+  h              Float
+  confidence     Float
+  needsReview    Boolean         @default(false)
+  correctedFrom  String?
+  entry          MedicationEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  document       SourceDocument  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+}
+
+model Discrepancy {
+  id          String          @id @default(cuid())
+  patientId   String
+  drugId      String?
+  drugLabel   String
+  type        DiscrepancyType
+  severity    Severity
+  detail      String
+  entryIds    String[]
+  fingerprint String
+  status      ReviewStatus    @default(PENDING)
+  detectedAt  DateTime        @default(now())
+  dueAt       DateTime
+  resolvedAt  DateTime?
+  patient     Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  actions     ReviewAction[]
+
+  @@index([patientId, status])
+}
+
+model ReviewAction {
+  id              String       @id @default(cuid())
+  discrepancyId   String
+  reviewerId      String
+  action          ReviewStatus
+  note            String?
+  approvedEntryId String?
+  createdAt       DateTime     @default(now())
+  discrepancy     Discrepancy  @relation(fields: [discrepancyId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  seq        BigInt   @id @default(autoincrement())
+  ts         DateTime @default(now())
+  actorId    String?
+  actorRole  String
+  action     String
+  entityType String
+  entityId   String
+  patientId  String?
+  payload    Json
+  prevHash   String
+  hash       String
+
+  @@index([patientId, ts])
+}
+
+model HandoverCard {
+  id          String    @id @default(cuid())
+  patientId   String
+  token       String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdById String
+  viewCount   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EgressEvent {
+  id      String   @id @default(cuid())
+  ts      DateTime @default(now())
+  host    String
+  blocked Boolean
+  source  String
+}
