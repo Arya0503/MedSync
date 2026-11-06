@@ -29,6 +29,10 @@ yarn-error.log*
 /storage/*
 !/storage/.gitkeep
 
+# database data
+/pgdata/
+/pgdata/*
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

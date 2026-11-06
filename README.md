@@ -41,33 +41,49 @@ docker compose exec app npm run seed
 
 ---
 
-## 💻 Local Development Setup
+## 💻 Local Development Setup (Zero-Docker / VS Code)
 
-If running Node.js directly on your host machine:
+MedBridge includes a built-in, zero-config local PostgreSQL 16 engine (`@electric-sql/pglite`) that runs directly in Node.js on `localhost:5432`. You do **not** need Docker Desktop or a manual PostgreSQL installation to run the app locally.
 
 ### Prerequisites
 - Node.js 18+ (tested on Node.js 20 & 24)
-- PostgreSQL 15+ (or run `docker compose up -d db`)
 
-### Steps
+### Quick Start in VS Code
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Configure environment
-cp .env.example .env
-# Ensure DATABASE_URL in .env points to your PostgreSQL instance
-
-# 3. Generate Prisma client & apply migrations
-npx prisma generate
-npx prisma db push
-
-# 4. Seed synthetic clinical records & demo users
-npm run seed
-
-# 5. Start development server
+# 2. Start the dev server (automatically launches local PostgreSQL on 5432 and seeds demo data on first run)
 npm run dev
 # Visit http://localhost:3000
+```
+
+> **Note:** If you want to run the database server independently in its own terminal tab, run:
+> ```bash
+> npm run db:start
+> ```
+> And in a second terminal tab:
+> ```bash
+> npm run dev
+> ```
+
+---
+
+## 🐳 Containerized Setup (Docker Compose)
+
+If you prefer to run both PostgreSQL and Next.js entirely inside Docker containers:
+
+```bash
+# 1. Copy environment configuration
+cp .env.example .env
+
+# 2. Build and start services (exposes Next.js on :3000 and PostgreSQL on :5432)
+docker compose up -d
+
+# 3. Seed demo patient, documents, and users
+docker compose exec app npm run seed
+
+# 4. Open in browser: http://localhost:3000
 ```
 
 ---

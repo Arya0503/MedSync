@@ -1,11 +1,10 @@
-import { PrismaClient, Role, Severity, DiscrepancyType } from "@prisma/client";
+import { Role, Severity, DiscrepancyType } from "@prisma/client";
+import { db as prisma } from "../src/lib/db";
 import bcrypt from "bcryptjs";
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-
-const prisma = new PrismaClient();
 
 const STORAGE_ROOT = path.resolve(process.cwd(), process.env.STORAGE_DIR || "./storage");
 

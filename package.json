@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev.mjs",
+    "db:start": "node scripts/db-server.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -11,6 +12,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.15",
+    "@electric-sql/pglite-socket": "^0.2.18",
     "@prisma/client": "^5.21.1",
     "bcryptjs": "^2.4.3",
     "next": "14.2.15",

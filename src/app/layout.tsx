@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -6,11 +6,14 @@ import { Shell } from "@/components/Shell";
 
 export const dynamic = "force-dynamic";
 
+export const viewport: Viewport = {
+  themeColor: "#147A5F",
+};
+
 export const metadata: Metadata = {
   title: "MedBridge — Medication Continuity & Safe Handover",
   description:
     "Source-traceable, local-only medication reconciliation and handover across clinical visits.",
-  themeColor: "#147A5F",
 };
 
 export default async function RootLayout({

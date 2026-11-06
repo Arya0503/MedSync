@@ -176,10 +176,11 @@ CREATE TABLE "Discrepancy" (
     "severity" "Severity" NOT NULL,
     "detail" TEXT NOT NULL,
     "entryIds" TEXT[],
-    "fingerprint" TEXT,
+    "fingerprint" TEXT NOT NULL,
     "status" "ReviewStatus" NOT NULL DEFAULT 'PENDING',
-    "slaDue" TIMESTAMP(3) NOT NULL,
     "detectedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "dueAt" TIMESTAMP(3) NOT NULL,
+    "resolvedAt" TIMESTAMP(3),
 
     CONSTRAINT "Discrepancy_pkey" PRIMARY KEY ("id")
 );
@@ -188,7 +189,7 @@ CREATE TABLE "Discrepancy" (
 CREATE TABLE "ReviewAction" (
     "id" TEXT NOT NULL,
     "discrepancyId" TEXT NOT NULL,
-    "actorId" TEXT NOT NULL,
+    "reviewerId" TEXT NOT NULL,
     "action" "ReviewStatus" NOT NULL,
     "note" TEXT,
     "approvedEntryId" TEXT,
@@ -199,18 +200,19 @@ CREATE TABLE "ReviewAction" (
 
 -- CreateTable
 CREATE TABLE "AuditLog" (
-    "id" TEXT NOT NULL,
-    "patientId" TEXT,
+    "seq" BIGSERIAL NOT NULL,
+    "ts" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "actorId" TEXT,
+    "actorRole" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "entityType" TEXT NOT NULL,
     "entityId" TEXT NOT NULL,
-    "details" JSONB,
+    "patientId" TEXT,
+    "payload" JSONB NOT NULL,
     "prevHash" TEXT NOT NULL,
     "hash" TEXT NOT NULL,
-    "ts" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("seq")
 );
 
 -- CreateTable
@@ -334,6 +336,8 @@ ALTER TABLE "HandoverCard" ADD CONSTRAINT "HandoverCard_patientId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+
 
 -- Database-level Immutability Trigger for AuditLog
 CREATE OR REPLACE FUNCTION prevent_audit_log_modification()
